@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DIRECTORY_PATH = '"C:\Users\calvi\OneDrive\Desktop\Deakin\SIT753\Task p\6.1p\jenkinsfile"'
+        DIRECTORY_PATH = '"C:\Users\calvi\Desktop\Deakin\SIT753\Credit task\jenkins-pipeline-demo\jenkinsfile"'
         TESTING_ENVIRONMENT = 'Testing-Env'
         PRODUCTION_ENVIRONMENT = 'Calvin Kong'  
     }
@@ -10,41 +10,45 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo "Fetch the source code from the directory path specified by the environment variable: ${env.DIRECTORY_PATH}"
-                echo "Compile the code and generate any necessary artefacts"
+                sh 'mvn clean install'
             }
         }
 
-        stage('Test') {
+        stage('Unit and Integration Tests') {
             steps {
-                echo "Unit tests"
-                echo "Integration tests"
+                sh 'mvn test'
             }
         }
 
-        stage('Code Quality Check') {
+        stage('Code Analysis') {
             steps {
-                echo "Check the quality of the code"
+                sh 'sonar-scanner -Dsonar.projectKey=demo -Dsonar.host.url=http://localhost:8000 -Dsonar.login=<your_token>'
             }
         }
 
-        stage('Deploy') {
+        stage('Security Scan') {
             steps {
-                echo "Deploy the application to a testing environment specified by the environment variable: ${env.TESTING_ENVIRONMENT}"
+                sh 'dependency-check.sh --project Demo --scan .'
             }
         }
 
-        stage('Approval') {
+        stage('Deploy to Staging') {
             steps {
-                echo "Waiting for manual approval..."
-                sleep time: 10, unit: 'SECONDS'
-                echo "approval received!"
+                sh 'scp target/demo.jar user@staging-ip:/opt/app/'
+                sh 'ssh user@staging-ip "java -jar /opt/app/demo.jar &"'
+            }
+        }
+
+        stage('Integration Tests on Staging') {
+            steps {
+                sh 'newman run postman_collection.json'
             }
         }
 
         stage('Deploy to Production') {
             steps {
-                echo "Deploying the application to the production environment: ${env.PRODUCTION_ENVIRONMENT}"
+                sh 'scp target/demo.jar user@prod-ip:/opt/app/'
+                sh 'ssh user@prod-ip "java -jar /opt/app/demo.jar &"'
             }
         }
     }
