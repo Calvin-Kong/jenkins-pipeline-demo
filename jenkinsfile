@@ -1,54 +1,50 @@
 pipeline {
     agent any
 
-    environment {
-        DIRECTORY_PATH = '"C:\Users\calvi\Desktop\Deakin\SIT753\Credit task\jenkins-pipeline-demo\jenkinsfile"'
-        TESTING_ENVIRONMENT = 'Testing-Env'
-        PRODUCTION_ENVIRONMENT = 'Calvin Kong'  
+    triggers {
+        pollSCM('H/5 * * * *')
     }
-
+    
     stages {
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                sh 'mvn clean package'
             }
         }
-
-        stage('Unit and Integration Tests') {
+        
+        stage('Unit & Integration Tests') {
             steps {
                 sh 'mvn test'
             }
         }
-
+        
         stage('Code Analysis') {
             steps {
-                sh 'sonar-scanner -Dsonar.projectKey=demo -Dsonar.host.url=http://localhost:8000 -Dsonar.login=<your_token>'
+                sh 'sonar-scanner'
             }
         }
-
+        
         stage('Security Scan') {
             steps {
-                sh 'dependency-check.sh --project Demo --scan .'
+                sh 'dependency-check.sh'
             }
         }
-
+        
         stage('Deploy to Staging') {
             steps {
-                sh 'scp target/demo.jar user@staging-ip:/opt/app/'
-                sh 'ssh user@staging-ip "java -jar /opt/app/demo.jar &"'
+                sh 'aws ec2 deploy --staging'
             }
         }
-
+        
         stage('Integration Tests on Staging') {
             steps {
-                sh 'newman run postman_collection.json'
+                sh 'npm run test:e2e'
             }
         }
-
+        
         stage('Deploy to Production') {
             steps {
-                sh 'scp target/demo.jar user@prod-ip:/opt/app/'
-                sh 'ssh user@prod-ip "java -jar /opt/app/demo.jar &"'
+                sh 'aws ec2 deploy --production'
             }
         }
     }
