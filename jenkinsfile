@@ -9,14 +9,14 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building using Maven..."
-                sh 'mvn clean package'
+                bat 'mvn clean package'
             }
         }
 
         stage('Unit and Integration Tests') {
             steps {
                 echo "Running tests..."
-                sh 'mvn test'
+                bat 'mvn test'
             }
         }
 
