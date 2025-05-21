@@ -4,10 +4,6 @@ pipeline {
     tools {
         maven "Maven 3.9.9"
     }
-    
-    triggers {
-        pollSCM('H/5 * * * *') // Poll GitHub every 5 minutes
-    }
 
     stages {
         stage('Build') {
