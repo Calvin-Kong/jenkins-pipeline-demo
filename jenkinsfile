@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tool {
+        maven "Mavem 3.9.9"
+    }
+    
     triggers {
         pollSCM('H/5 * * * *') // Poll GitHub every 5 minutes
     }
